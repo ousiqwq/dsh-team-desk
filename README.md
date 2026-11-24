@@ -8,7 +8,7 @@
 
 ## 安装
 
-适用于 **DSH 0.2.3-alpha.2** 和 **Node.js 26.13.1 或以上**。从[私有预览发行页](https://github.com/ousiqwq/dsh-team-desk/releases/tag/v0.15.4-preview.1)下载 npm 安装包，在保存安装包的目录执行。两种方式任选其一。
+适用于 **DSH 0.2.3-alpha.2** 和 **Node.js 26.13.1 或以上**（其实你装上去试试就行了）。从[私有预览发行页](https://github.com/ousiqwq/dsh-team-desk/releases/tag/v0.15.4-preview.1)下载 npm 安装包，在保存安装包的目录执行。两种方式任选其一。
 
 **npx 一键安装**
 
