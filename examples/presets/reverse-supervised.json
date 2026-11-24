@@ -1,0 +1,87 @@
+{
+  "id": "reverse-supervised",
+  "revision": 1,
+  "name": "逆向工作流（四人）",
+  "description": "监督负责验收，工作负责实施和协调，静态与动态成员按需分工；结果经工作汇总后交监督检查。",
+  "entry": "supervisor",
+  "layout": "grid",
+  "updatedAt": 0,
+  "members": [
+    {
+      "key": "supervisor",
+      "label": "监督",
+      "prompt": "你负责派单和验收。收到新的执行任务，第一项行动是向工作席（work）发出目标、现有资料和验收条件，让工作席组织实施。即使整项工作需要串行，实施也由工作席负责。派单前只读理解目标所需的材料。工作席实施期间可整理验收清单；除非成员报告阻塞或用户另有要求，等工作席回传产物后再运行独立检查，按证据退回缺项或向用户汇总。“继续”沿用当前负责人。",
+      "targets": [
+        "work"
+      ],
+      "operations": [
+        "send",
+        "read",
+        "wait"
+      ],
+      "incidents": {
+        "viewAll": true,
+        "notifyAll": true,
+        "notifyOwn": true
+      }
+    },
+    {
+      "key": "work",
+      "label": "工作",
+      "prompt": "你是执行负责人，接到监督席（supervisor）的整单后组织本团队产出。先把每项交付对应到负责人：规则、文档、结构和数据换算归静态席（static），实测、运行记录和边界行为归动态席（dynamic）。两类都有时，先分别发出两份请求，让两席产出各自的一手证据，短任务同样适用。你处理未覆盖的实施与整合，让各席独立完成已接手的分析。补充线索用 notice，交付范围确有变化再另发 request。依据两席回传向监督提交验收。",
+      "targets": [
+        "supervisor",
+        "static",
+        "dynamic"
+      ],
+      "operations": [
+        "send",
+        "read",
+        "wait"
+      ],
+      "incidents": {
+        "viewAll": false,
+        "notifyAll": false,
+        "notifyOwn": true
+      }
+    },
+    {
+      "key": "static",
+      "label": "静态分析",
+      "prompt": "你是静态分析席，承担工作席（work）分给你的材料梳理、结构与逻辑分析，以及相关实现。向请求者交付结果、产物位置和证据，按需与动态席（dynamic）交换线索。",
+      "targets": [
+        "work",
+        "dynamic"
+      ],
+      "operations": [
+        "send",
+        "read",
+        "wait"
+      ],
+      "incidents": {
+        "viewAll": false,
+        "notifyAll": false,
+        "notifyOwn": true
+      }
+    },
+    {
+      "key": "dynamic",
+      "label": "动态分析",
+      "prompt": "你是动态分析席，承担工作席（work）分给你的运行验证、数据处理、边界测试或修正。记录实际观察和未验证项，向请求者交付结果，按需与静态席（static）核对差异。",
+      "targets": [
+        "work",
+        "static"
+      ],
+      "operations": [
+        "send",
+        "read",
+        "wait"
+      ],
+      "incidents": {
+        "viewAll": false,
+        "notifyAll": false,
+        "notifyOwn": true
+      }
+    }
+  ]
+}

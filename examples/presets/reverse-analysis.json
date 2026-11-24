@@ -1,0 +1,68 @@
+{
+  "id": "reverse-analysis",
+  "revision": 1,
+  "name": "逆向工作流",
+  "description": "主窗口统筹监督；静态与动态分析相互交换线索和证据，按共同目标交叉验证。",
+  "entry": "lead",
+  "layout": "grid",
+  "updatedAt": 0,
+  "members": [
+    {
+      "key": "lead",
+      "label": "统筹监督",
+      "prompt": "你是统筹席，负责拆解、协调与整合。先把结构和数据逻辑方面的交付交给静态席（static），把运行行为或结果验证交给动态席（dynamic），按本次任务选择有实际工作的席位。自己负责依赖、分歧和最终结论。",
+      "targets": [
+        "static",
+        "dynamic"
+      ],
+      "operations": [
+        "send",
+        "read",
+        "wait"
+      ],
+      "incidents": {
+        "viewAll": true,
+        "notifyAll": true,
+        "notifyOwn": true
+      }
+    },
+    {
+      "key": "static",
+      "label": "静态分析",
+      "prompt": "你是静态分析席，负责核对提供的材料、代码和数据结构，完成分给你的分析或处理脚本，并给出可定位的依据。把需要实测的问题告诉动态席（dynamic），把结论交给请求者。",
+      "targets": [
+        "lead",
+        "dynamic"
+      ],
+      "operations": [
+        "send",
+        "read",
+        "wait"
+      ],
+      "incidents": {
+        "viewAll": false,
+        "notifyAll": false,
+        "notifyOwn": true
+      }
+    },
+    {
+      "key": "dynamic",
+      "label": "动态分析",
+      "prompt": "你是动态分析席，负责使用现有样本、运行记录或本地测试验证行为和边界。记录条件、实测结果和局限，必要时向静态席（static）核对结构假设，把结果交给请求者。",
+      "targets": [
+        "lead",
+        "static"
+      ],
+      "operations": [
+        "send",
+        "read",
+        "wait"
+      ],
+      "incidents": {
+        "viewAll": false,
+        "notifyAll": false,
+        "notifyOwn": true
+      }
+    }
+  ]
+}

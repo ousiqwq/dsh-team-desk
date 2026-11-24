@@ -1,0 +1,26 @@
+import {Select} from './Select.tsx';
+import {Help,SectionTitle} from './ui.tsx';
+import {Input} from '@deepseek-ai/dsh-client-ui-primitives';
+import {tr, messageText, localeId} from './locale.ts';
+import {useDraft} from './use-draft.ts';
+import {useState} from 'react';
+import {Button} from '@deepseek-ai/dsh-client-ui-primitives';
+import type {State,ToolResource} from '../domain/types.ts';
+const blank={id:'',label:'',instance:'',mode:'advisory' as ToolResource['mode'],bindings:[] as ToolResource['bindings'],maxReaders:1};
+export function Resources({state,perform}:{state:State;perform:(data:Record<string,unknown>)=>Promise<unknown>}){
+ const [draft,setDraft]=useState(blank),[expected,setExpected]=useState(0),[tools,setTools]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false),[reasons,setReasons]=useState<Record<string,string>>({});
+ const [original,setOriginal]=useState(blank);
+ const originalTools=original.bindings.map(b=>b.mode+' '+b.tool).join('\n');
+ function reset(){setDraft(blank);setOriginal(blank);setTools('');setExpected(0);}
+ useDraft(JSON.stringify(draft)!==JSON.stringify(original)||tools!==originalTools,reset);
+ async function run(data:Record<string,unknown>){setBusy(true);setError('');try{await perform(data);return true;}catch(e){setError(String(e));return false;}finally{setBusy(false);}}
+ return <section data-tool-resources=""><SectionTitle title={tr("共享工具实例")} hint={tr("为调试器、建模软件等有状态实例设置占用规则。只匹配这里登记的工具名称；普通文件操作保持原生行为。建议模式仅记录占用，保护模式在原生调用入口检查冲突。")}/>{error&&<p role="alert">{messageText(error)}</p>}
+ {(state.resources??[]).map(r=><article className="td-card" key={r.id}><div className="td-row"><strong>{r.label}</strong><span className="td-badge">{r.mode==='guarded'?tr("调用入口保护"):tr("建议性占用")} · v{r.revision}</span><Button size="sm" disabled={busy||!!r.operations.length||r.leases.some(l=>l.expiresAt>Date.now())} onClick={()=>{const values={id:r.id,label:r.label,instance:r.instance,mode:r.mode,bindings:r.bindings,maxReaders:r.maxReaders};setDraft(values);setOriginal(values);setTools(r.bindings.map(b=>b.mode+' '+b.tool).join('\n'));setExpected(r.revision);}}>{tr("编辑")}</Button></div><p>{r.instance}</p><p className="td-muted">{r.bindings.map(b=>b.tool+' ('+b.mode+')').join(' · ')||tr("尚未配置工具入口")}</p>{r.leases.map(l=><p key={l.id}>{tr("占用：{p0} ·{p1} ·{p2}{p3}", {p0: l.owner, p1: l.mode, p2: new Date(l.expiresAt).toLocaleTimeString(localeId()), p3: l.expiresAt<=Date.now()?tr("已过期"):tr("到期")})}</p>)}
+ {r.operations.map(o=><div className="td-card" key={o.id}><strong>{o.state==='running'?tr("执行中"):tr("待核对")} · {o.tool}</strong><p className="td-muted">{o.owner} · {o.error??o.callId}</p>{o.state==='uncertain'&&<form onSubmit={e=>{e.preventDefault();void run({action:'resource-resolve',resourceId:r.id,operationId:o.id,reason:reasons[o.id]});}}><label>{tr("确认工具实例已停止或完成后的核对依据")}<Input value={reasons[o.id]??''} onChange={e=>setReasons({...reasons,[o.id]:e.target.value})} required maxLength={2000}/></label><Button size="sm" disabled={busy} type="submit">{tr("记录核对并解除占用")}</Button></form>}</div>)}<details><summary>{tr("最近协调记录")}</summary>{r.history.slice(-20).reverse().map((h,i)=><p key={i}>{new Date(h.time).toLocaleString(localeId())} · {h.kind} · {h.note}</p>)}</details></article>)}
+ <details className="td-card" open={!!draft.id}><summary>{expected?tr("编辑实例"):tr("添加实例")}</summary><form onSubmit={e=>{e.preventDefault();try{const bindings=tools.trim()?tools.trim().split('\n').map(line=>{const [mode,tool,...extra]=line.trim().split(/\s+/);if(extra.length||!tool||!['read','write'].includes(mode!))throw Error(tr("每行格式：read 工具名 或 write 工具名"));return {tool,mode};}):[];void run({action:'resource-configure',resource:{...draft,bindings},expected}).then(ok=>{if(ok)reset();});}catch(error){setError(String(error));}}}>
+ <div className="td-preset-pair"><label>{tr("实例标识")}<Input value={draft.id} disabled={!!expected} onChange={e=>setDraft({...draft,id:e.target.value})} required maxLength={120}/></label><label>{tr("显示名称")}<Input value={draft.label} onChange={e=>setDraft({...draft,label:e.target.value})} required maxLength={120}/></label></div>
+ <label>{tr("实例地址或稳定标识")}<Input value={draft.instance} onChange={e=>setDraft({...draft,instance:e.target.value})} required placeholder={tr("例如 blender://localhost:9876")} maxLength={500}/></label>
+ <div className="td-preset-pair"><label>{tr("协调模式")}<Select value={draft.mode} onValueChange={e=>setDraft({...draft,mode:e as ToolResource['mode']})} aria-label={tr("协调模式")}><option value="advisory">{tr("建议性占用")}</option><option value="guarded">{tr("调用入口保护")}</option></Select></label><label>{tr("最大并行读取数")}<Input type="number" min={1} max={32} value={draft.maxReaders} onChange={e=>setDraft({...draft,maxReaders:Number(e.target.value)})}/></label></div>
+ <div className="td-field-heading"><span>{tr("准确工具名称（每行：read 工具名 / write 工具名）")}</span><Help text={tr("不自动推断只读操作。保护只覆盖这些 DSH 入口；其他程序直接访问实例不会经过此锁。无法确认结果时需核对后解除占用。")}/></div><label aria-label={tr("准确工具名称（每行：read 工具名 / write 工具名）")}><textarea rows={4} value={tools} onChange={e=>setTools(e.target.value)} placeholder="write blender_execute_code"/></label><div className="td-card-actions"><Button variant="primary" type="submit" size="sm" disabled={busy}>{expected?tr("保存实例"):tr("添加实例")}</Button></div></form></details>
+ </section>;
+}

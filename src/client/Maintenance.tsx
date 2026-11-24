@@ -1,0 +1,51 @@
+import {Select} from './Select.tsx';
+import {Help,SectionTitle} from './ui.tsx';
+import {Input} from '@deepseek-ai/dsh-client-ui-primitives';
+import {tr, messageText, localeId} from './locale.ts';
+import {useEffect,useState} from 'react';
+import type {recordsPage} from '../domain/management-state.ts';
+import {Button} from '@deepseek-ai/dsh-client-ui-primitives';
+import type {Team,State,Message} from '../domain/types.ts';
+import type {ViewData,Injected} from './contracts.ts';
+import {DeliveryStatus} from './Coordination.tsx';
+export function RouteProbe({team,from,to,perform}:{team:Team;from?:string;to?:string;perform:Injected['perform']}){
+ const [sender,setSender]=useState(from??team.anchor),[target,setTarget]=useState(to??team.members.find(m=>m.sessionId!==team.anchor)?.sessionId??''),[kind,setKind]=useState('notice'),[priority,setPriority]=useState('normal'),[code,setCode]=useState(''),[payload,setPayload]=useState(''),[result,setResult]=useState('');
+ return <details className="td-card" data-route-probe=""><summary>{tr("路由试算")}</summary><Help text={tr("按当前保存的连接和协议检查，不发送消息、不启动模型。")}/><form onSubmit={e=>{e.preventDefault();try{void perform({action:'route-preview',sessionId:sender,target,options:{kind,priority,...(code?{code}:{}),...(payload?{payload:JSON.parse(payload)}:{})}}).then(raw=>{const r=raw as {allowed:boolean;reason:string;options?:unknown};setResult((r.allowed?tr("允许投递"):tr("暂不允许"))+'：'+({paused:tr("团队通信已暂停"),allowed:tr("符合当前方向和条件"),direction_or_conditions:tr("单向连接或类型、优先级、事件条件不匹配")}[r.reason]??r.reason));}).catch(e=>setResult(String(e)));}catch{setResult(tr("事件数据需要有效 JSON"));}}}>
+ <div className="td-preset-pair"><label>{tr("发送方")}<Select aria-label={tr("试算发送方")} value={sender} onValueChange={e=>setSender(e)}>{team.members.filter(m=>m.active!==false).map(m=><option key={m.sessionId} value={m.sessionId}>{m.label}</option>)}</Select></label><label>{tr("接收方")}<Select aria-label={tr("试算接收方")} value={target} onValueChange={e=>setTarget(e)}>{team.members.filter(m=>m.active!==false).map(m=><option key={m.sessionId} value={m.sessionId}>{m.label}</option>)}</Select></label></div>
+ <div className="td-preset-pair"><label>{tr("消息类型")}<Select value={kind} onValueChange={e=>setKind(e)} aria-label={tr("消息类型")}><option value="notice">{tr("通知")}</option><option value="request">{tr("请求")}</option><option value="event">{tr("事件")}</option></Select></label><label>{tr("优先级")}<Select value={priority} onValueChange={e=>setPriority(e)} aria-label={tr("优先级")}><option value="normal">{tr("普通")}</option><option value="high">{tr("高")}</option><option value="critical">{tr("紧急")}</option></Select></label></div><label>{tr("事件代码")}<Input value={code} onChange={e=>setCode(e.target.value)} list="td-event-codes"/></label><datalist id="td-event-codes">{team.coordination?.events?.map(d=><option key={d.code} value={d.code}>{d.label}</option>)}</datalist><label>{tr("事件数据（可选 JSON）")}<textarea rows={3} value={payload} onChange={e=>setPayload(e.target.value)}/></label><Button type="submit" size="sm">{tr("检查这条路由")}</Button>{result&&<p role="status">{result}</p>}</form></details>;
+}
+export function CoordinationRecords({team,data,perform,title}:{team:Team;data:ViewData;perform:Injected['perform'];title:(id:string)=>string}){
+ const [incidentQuery,setIncidentQuery]=useState('');
+ const [cursors,setCursors]=useState<string[]>(['']),[records,setRecords]=useState<ReturnType<typeof recordsPage>>();
+ const before=cursors[cursors.length-1]!;
+ useEffect(()=>{
+   const controller=new AbortController();
+   const query=new URLSearchParams({teamId:team.id,before,incident:incidentQuery});
+   void fetch('/api/team-desk.records?'+query,{signal:controller.signal}).then(async response=>{
+     if(!response.ok)throw Error(tr("操作失败"));const page=await response.json();
+     if(!controller.signal.aborted){setRecords(page);setError('');}
+   }).catch(e=>{if(!controller.signal.aborted)setError(String(e));});
+   return ()=>controller.abort();
+ },[team.id,data.state.revision,before,incidentQuery]);
+ const incidents=records?.incidents??[];
+ const [error,setError]=useState(''),[busy,setBusy]=useState(false),[scope,setScope]=useState(''),[days,setDays]=useState(data.state.retentionDays??30),[reasons,setReasons]=useState<Record<string,string>>({}),[mode,setMode]=useState('threads');
+ async function run(value:Record<string,unknown>){setBusy(true);try{await perform({teamId:team.id,...value});setError('');}catch(e){setError(String(e));}finally{setBusy(false);}}
+ const messages=records?.messages??[],health=data.health,pendingSync=data.syncPending?.filter(o=>o.origin?.teamId===team.id)??[],projects=data.state.projects?.filter(p=>p.teamIds.includes(team.id))??[],groups=new Map<string,Message[]>();
+ for(const m of messages){const root=m.replyTo?messages.find(x=>x.id===m.replyTo):m,key=mode==='flat'?m.id:root?.publication?root.sender+':'+root.epoch+':'+root.publication.key:root?.id??m.replyTo??m.id;groups.set(key,[...(groups.get(key)??[]),m]);}
+ const render=(m:Message)=><article key={m.id}><strong>{title(m.sender)} → {title(m.target)}</strong><DeliveryStatus message={m}/>{m.code&&<p>{team.coordination?.events?.find(d=>d.code===m.code)?.label??m.code}</p>}{m.native!=='admitted'&&m.native!=='discarded'&&m.state!=='cancelled'&&!m.cancellation&&<Button size="sm" disabled={busy} onClick={()=>void run({action:'message-cancel',messageId:m.id})}>{tr("撤回待执行消息")}</Button>}{m.state==='uncertain'&&<Button size="sm" disabled={busy} onClick={()=>void run({action:'message-reconcile',messageId:m.id})}>{tr("核对投递")}</Button>}<pre>{m.text}</pre>{m.payload!==undefined&&<details><summary>{tr("事件数据")}</summary><pre>{JSON.stringify(m.payload,null,2)}</pre></details>}</article>;
+ return <div data-coordination-records="">{error&&<p role="alert">{messageText(error)}</p>}
+ <div className="td-card"><h3>{tr("运行与恢复")}</h3><p>{tr("本团队待派发{p0} · 待核对{p1} · 最长等待{p2} 秒", {p0: records?.queued??0, p1: records?.uncertain??0, p2: Math.round(Math.max(0,Date.now()-(records?.oldest??Date.now()))/1000)})}</p>{health?.recipients?.filter(r=>team.members.some(m=>m.sessionId===r.target)).map(r=><p key={r.target}>{tr("{p0}：{p1} 条待处理，{p2} 条等待前置消息 ·{p3}", {p0: title(r.target), p1: r.pending, p2: r.causalWaiting, p3: r.paused?tr("通信暂停"):r.status==='offline'?tr("会话离线"):r.status==='running'?tr("正在运行"):tr("可接收")})}</p>)}{pendingSync.length>0&&<p role="alert">{tr("本团队有待核对的同步记录")}</p>}<Button size="sm" disabled={busy} onClick={()=>void run({action:'sync-reconcile'})}>{tr("核对未完成的同步记录")}</Button>
+ {pendingSync.map(o=><p key={o.id}>{o.resource??tr("待核对记录")} · {o.origin?.teamId??tr("旧记录缺少来源")} <a href={'/api/team-desk.sync-record?id='+o.id} download>{tr("下载原记录")}</a></p>)}
+ {(data.state.hostOperations??[]).filter(o=>o.teamId===team.id&&['prepared','uncertain'].includes(o.state)).map(o=><form key={o.id} className="td-card" onSubmit={e=>{e.preventDefault();void run({action:'host-operation-resolve',operationId:o.id,reason:reasons[o.id]});}}><strong>{o.kind} · {o.state==='prepared'?tr("正在执行"):tr("结果待核对")}</strong><p>{messageText(o.error)}</p><p className="td-muted">{tr("涉及会话：{p0}。解除待处理状态不会重发指令或删除会话。", {p0: o.sessions.map(title).join('、')||tr("当前入口会话")})}</p>{o.state==='uncertain'&&<><label>{tr("核对依据")}<Input required value={reasons[o.id]??''} onChange={e=>setReasons({...reasons,[o.id]:e.target.value})}/></label><Button size="sm" disabled={busy} type="submit">{tr("确认已核对")}</Button></>}</form>)}
+ </div>
+ <div className="td-row"><h3>{tr("通信记录")}</h3><Select aria-label={tr("通信记录分组")} value={mode} onValueChange={e=>setMode(e)}><option value="threads">{tr("按请求与多目标分组")}</option><option value="flat">{tr("逐条显示")}</option></Select><a href={'/api/team-desk.export?teamId='+encodeURIComponent(team.id)} download>{tr("导出团队记录")}</a></div>
+ {[...groups].slice(-100).reverse().map(([key,rows])=><details className="td-card" key={key}><summary>{tr("{p0} ·{p1} 条 · 进入上下文{p2} · 处理确认{p3}{p4}", {p0: new Date(rows[0]!.time).toLocaleString(localeId()), p1: rows.length, p2: rows.filter(m=>m.native==='admitted').length, p3: rows.filter(m=>m.ack).length, p4: rows.some(m=>m.kind==='reply')?tr(" · 有回复"):''})}</summary>{rows.map(render)}</details>)}
+ <div className="td-row"><Button size="sm" disabled={cursors.length===1} onClick={()=>{setRecords(undefined);setCursors(c=>c.slice(0,-1));}}>{tr('上一页')}</Button><Button size="sm" disabled={!records?.next} onClick={()=>{if(records?.next){setCursors(c=>[...c,records.next!]);setRecords(undefined);}}}>{tr('下一页')}</Button></div>
+ <details className="td-card"><summary>{tr("成员运行记录")}</summary>
+ <Input aria-label={tr("筛选成员或派单")} placeholder={tr("筛选成员或派单")} value={incidentQuery} onChange={e=>setIncidentQuery(e.target.value)}/>
+ {incidents.slice(-100).reverse().map(e=><p key={e.id}>{new Date(e.time).toLocaleString(localeId())} · {e.text} <code>{e.incident!.code}</code></p>)}</details>
+ <details className="td-card"><summary>{tr("配置与运行变更")}</summary>{(records?.events??[]).slice(-100).reverse().map(e=><p key={e.id}>{new Date(e.time).toLocaleString(localeId())} · {e.text}</p>)}</details>
+ <div className="td-card"><SectionTitle title={tr("历史归档")} hint={tr("历史移到本地归档，保留查询和重试判重。未完成、待核对的消息和工具占用不会移除。")}/><div className="td-preset-pair"><label>{tr("归档范围")}<Select aria-label={tr("归档范围")} value={scope} onValueChange={e=>setScope(e)}><option value="">{tr("当前团队")}</option>{projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</Select></label><label>{tr("活动记录保留天数")}<Input aria-label={tr("活动记录保留天数")} type="number" min={0} max={3650} value={days} onChange={e=>setDays(Number(e.target.value))}/></label></div><Help text={tr("管理策略适用于全部团队和已关联项目；每小时检查。设为 0 关闭自动归档。")}/><Button size="sm" disabled={busy} onClick={()=>void run({action:'retention',days})}>{tr("保存归档策略")}</Button><Button size="sm" disabled={busy} onClick={()=>void run({action:'archive',before:Date.now()-days*86400000,...(scope?{projectId:scope}:{})})}>{tr("归档较早记录")}</Button>
+ {(data.state.archives??[]).filter(a=>scope?a.projectIds.includes(scope):a.teamIds.includes(team.id)).slice().reverse().map(a=><p key={a.id}><a href={'/api/team-desk.archive?id='+a.id} download>{tr("{p0} ·{p1} 消息 /{p2} 决定 /{p3} 修改 /{p4} 任务 /{p5} 控制", {p0: new Date(a.time).toLocaleString(localeId()), p1: a.messages, p2: a.history, p3: a.changes, p4: a.tasks??0, p5: a.controls??0})}</a></p>)}
+ </div></div>;
+}

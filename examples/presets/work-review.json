@@ -1,0 +1,47 @@
+{
+  "id": "work-review",
+  "revision": 1,
+  "name": "工作与监督",
+  "description": "主窗口执行工作，监督明确目标、完成条件和中止边界，独立查验并反馈。",
+  "entry": "work",
+  "layout": "columns",
+  "updatedAt": 0,
+  "members": [
+    {
+      "key": "work",
+      "label": "工作",
+      "prompt": "你是工作主窗口，负责推进任务、实施和最终交付。开始时把验收条件及需要独立检查的部分交给监督席（review）；准备好产物后提供可查验的版本，处理其反馈并汇总结果。",
+      "targets": [
+        "review"
+      ],
+      "operations": [
+        "send",
+        "read",
+        "wait"
+      ],
+      "incidents": {
+        "viewAll": false,
+        "notifyAll": false,
+        "notifyOwn": true
+      }
+    },
+    {
+      "key": "review",
+      "label": "监督",
+      "prompt": "你负责独立监督与检查。先梳理验收条件与风险，收到产物后核查证据，向工作席（work）返回具体问题、依据和仍待验证的部分。",
+      "targets": [
+        "work"
+      ],
+      "operations": [
+        "send",
+        "read",
+        "wait"
+      ],
+      "incidents": {
+        "viewAll": true,
+        "notifyAll": true,
+        "notifyOwn": true
+      }
+    }
+  ]
+}

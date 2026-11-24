@@ -1,0 +1,5 @@
+node_modules/
+operations/
+*.tgz
+.env*
+.npmrc

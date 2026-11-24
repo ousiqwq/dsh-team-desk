@@ -1,0 +1,12 @@
+import { build } from 'esbuild';
+import { mkdir,writeFile } from 'node:fs/promises';
+await mkdir('dist',{recursive:true});
+const host={bundle:true,platform:'node',format:'esm',packages:'external',target:'node26',sourcemap:false};
+await build({...host,entryPoints:['src/index.ts'],outfile:'dist/index.js'});
+const browser={bundle:true,platform:'browser',format:'cjs',packages:'external',target:'es2022',jsx:'automatic',write:false};
+const verifier=await build({...host,stdin:{contents:"export {tdVerifiedTask} from './src/host-support/title-receipt.ts'",resolveDir:process.cwd(),loader:'ts'},write:false,treeShaking:true,format:'esm'});
+const verifierSource=verifier.outputFiles[0].text.replace(/export \{[^}]*\};\s*$/,'');
+await writeFile('dist/title-receipt.js',verifierSource);
+const result=await build({...browser,entryPoints:['src/client/index.tsx']});
+if(/require\(["']node:/.test(result.outputFiles[0].text))throw Error('Node-only dependency leaked into client bundle');
+await writeFile('dist/client.js',`window.__ModuleLoader__.load({id:'dsh-plugin-team-desk',factory:require=>{const module={exports:{}};const exports=module.exports;\n${result.outputFiles[0].text}\nreturn module.exports;}});\n`);
