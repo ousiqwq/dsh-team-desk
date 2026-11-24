@@ -1,7 +1,7 @@
 <h1 align="center">
-  <img src="https://raw.githubusercontent.com/ousiqwq/dsh-team-desk/main/assets/avatar.png" width="124" height="124" align="center" alt="月兔少女头像">
+  <img src="https://cdn.jsdelivr.net/npm/dsh-plugin-team-desk@0.15.5/assets/avatar.png" width="124" height="124" align="center" alt="月兔少女头像">
   &nbsp;
-  <img src="https://raw.githubusercontent.com/ousiqwq/dsh-team-desk/main/assets/wordmark.svg" width="330" align="center" alt="Team Desk · Multi-session collaboration for DeepSeek Harness">
+  <img src="https://cdn.jsdelivr.net/npm/dsh-plugin-team-desk@0.15.5/assets/wordmark.svg" width="330" align="center" alt="Team Desk · Multi-session collaboration for DeepSeek Harness">
 </h1>
 
 在 DeepSeek Harness 的同一个工作区并排打开团队会话。每个成员有独立的对话、职责和权限，可以接单、交流，并把结果交回派单人。
@@ -39,7 +39,7 @@ dsh plugin --profile web add dsh-plugin-team-desk@latest && npx --yes dsh-plugin
 
 首次组队时，在设置中点「创建团队」并确认，当前会话就成为主会话。在「切换预设」选择 **逆向工作流（四人）**，打开「同时应用预设排布」，再点 **应用到当前团队**。配置生效后点「查看窗口」，就能在四个窗格里分别对话。
 
-![四个会话正在排查日历订阅异常。工作席发出两条派单，静态席收件后核对字段，动态席运行复现用例。标注分别指向右上角双人图标和左侧会话右键菜单，菜单摘图显示「创建团队」和「编辑此团队」。](https://raw.githubusercontent.com/ousiqwq/dsh-team-desk/main/assets/previews/four-panes.png)
+![四个会话正在排查日历订阅异常。工作席发出两条派单，静态席收件后核对字段，动态席运行复现用例。标注分别指向右上角双人图标和左侧会话右键菜单，菜单摘图显示「创建团队」和「编辑此团队」。](https://cdn.jsdelivr.net/npm/dsh-plugin-team-desk@0.15.5/assets/previews/four-panes.png)
 
 ## 拖拽排布
 
@@ -48,7 +48,7 @@ dsh plugin --profile web add dsh-plugin-team-desk@latest && npx --yes dsh-plugin
 - **替换窗格**　四窗已满时，从左侧拖入尚未显示的会话，会替换鼠标所在的窗格。被替换的会话仍在左侧列表。
 - **放进右侧栏**　先展开右侧栏，再把会话拖进栏内。拖到对话区的最右边缘会调整分屏。
 
-![从左侧会话树按住「复现订阅异常」，拖入「核对日历字段」下方的蓝色区域后松开。](https://raw.githubusercontent.com/ousiqwq/dsh-team-desk/main/assets/previews/drag-to-split.png)
+![从左侧会话树按住「复现订阅异常」，拖入「核对日历字段」下方的蓝色区域后松开。](https://cdn.jsdelivr.net/npm/dsh-plugin-team-desk@0.15.5/assets/previews/drag-to-split.png)
 
 ## 自建团队与预设
 
