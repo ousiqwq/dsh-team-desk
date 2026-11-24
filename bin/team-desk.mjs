@@ -4,6 +4,7 @@ import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { delimiter, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
+import {unsupportedHostStatus} from '../scripts/host-compatibility.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
@@ -28,10 +29,12 @@ function locateHost(explicit) {
   throw new Error('找不到 DSH 宿主。请用 --host 指向含 node_modules/@deepseek-ai/dsh 的目录。');
 }
 
-function run(script, args, env = process.env) {
+function run(script, args, env = process.env, allowUnsupported = false) {
   const command = spawnSync(process.execPath, [script, ...args], {stdio: 'inherit', env});
   if (command.error) throw command.error;
+  if (allowUnsupported && command.status === unsupportedHostStatus) return false;
   if (command.status !== 0) throw new Error('命令失败：' + [script, ...args].join(' '));
+  return true;
 }
 
 function main() {
@@ -44,17 +47,28 @@ function main() {
   if (positionals.length !== 1 || !['install', 'adapt', 'check'].includes(action)) throw new Error(usage);
   const host = locateHost(values.host);
   const dsh = join(host, 'node_modules', '@deepseek-ai', 'dsh');
-  if (JSON.parse(readFileSync(join(dsh, 'package.json'), 'utf8')).version !== '0.2.3-alpha.2') {
-    throw new Error('此版本适用于 DSH 0.2.3-alpha.2。');
+  const hostVersion = JSON.parse(readFileSync(join(dsh, 'package.json'), 'utf8')).version;
+  const otherVersion = hostVersion !== '0.2.3-alpha.2';
+  if (otherVersion) console.warn('当前 DSH ' + hostVersion + '，适配基准为 0.2.3-alpha.2，将检查本机组件。');
+  const adapters = [
+    ['界面与会话布局', 'alpha-shared-header.mjs'],
+    ['团队审核集成', 'team-mail-review.mjs'],
+    ['会话标题', 'alpha-legacy-titles.mjs'],
+  ];
+  const ready = [];
+  for (const [label, filename] of adapters) {
+    const script = join(root, 'scripts', filename);
+    const args = mode => filename === 'alpha-shared-header.mjs' ? [host, mode] : [mode, host];
+    if (run(script, args('--check'), process.env, otherVersion)) {
+      ready.push([script, args('--apply')]);
+    } else {
+      console.warn('跳过不兼容的宿主适配：' + label);
+    }
   }
-  const scripts = join(root, 'scripts');
-  function adapters(mode) {
-    run(join(scripts, 'alpha-shared-header.mjs'), [host, mode]);
-    run(join(scripts, 'team-mail-review.mjs'), [mode, host]);
-    run(join(scripts, 'alpha-legacy-titles.mjs'), [mode, host]);
+  if (action === 'check') {
+    if (ready.length < adapters.length) process.exitCode = unsupportedHostStatus;
+    return;
   }
-  adapters('--check');
-  if (action === 'check') return;
   if (action === 'install') {
     const filename = pkg.name + '-' + pkg.version + '.tgz';
     const archive = values.tarball || (existsSync(filename) ? filename : undefined);
@@ -64,8 +78,8 @@ function main() {
     const env = existsSync(bin) ? {...process.env, PATH: bin + delimiter + process.env.PATH} : process.env;
     run(join(dsh, 'lib', 'bin.js'), ['plugin', '--profile', values.profile, 'add', source], env);
   }
-  adapters('--apply');
-  console.log('Team Desk 宿主适配已就绪。重启 DSH 后生效。');
+  for (const [script, args] of ready) run(script, args);
+  console.log('已应用宿主适配 ' + ready.length + '/' + adapters.length + '。请重启 DSH。');
 }
 
 try { main(); } catch (error) { console.error(error.message); process.exitCode = 1; }

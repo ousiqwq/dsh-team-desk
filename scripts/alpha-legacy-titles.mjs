@@ -1,4 +1,5 @@
 // Read compatibility for exact title citations already present in a pre-upgrade backup.
+import {UnsupportedHostBuild, readHostFile, reportHostError} from './host-compatibility.mjs';
 import { createHash, randomUUID } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { createInterface } from 'node:readline';
@@ -81,12 +82,11 @@ async function host() {
   const files=[];
   for(const name of ['dsh-session-format-v3-to-v4','dsh-session-title']){
     const pkg=join(root,'node_modules/@deepseek-ai',name);
-    if(JSON.parse(await readFile(join(pkg,'package.json'),'utf8')).version!=='0.2.3-alpha.2')throw Error('Unsupported '+name);
-    const file=join(pkg,'lib/index.js'),current=await readFile(file,'utf8');
+    const file=join(pkg,'lib/index.js'),current=await readHostFile(file);
     let original=current,desired,entries=[];
     if(name==='dsh-session-title'){
       if(original.startsWith(helper))original=reverse(original.slice(helper.length),titleEdits);
-      if(digest(original)!==generatorHash)throw Error('Unexpected title service checksum');
+      if(digest(original)!==generatorHash)throw new UnsupportedHostBuild('Unexpected title service checksum');
       desired=mode==='--restore'||mode==='--read-only'?original:helper+edit(original,titleEdits);
     }else{
       if(original.startsWith(helper))original=original.slice(helper.length);
@@ -98,7 +98,7 @@ async function host() {
         else original=original.slice(stop+end.length);
         original=reverse(original,specs);
       }
-      if(digest(original)!==originalHash)throw Error('Unexpected session format package checksum');
+      if(digest(original)!==originalHash)throw new UnsupportedHostBuild('Unexpected session format package checksum');
       if(manifest){const data=JSON.parse(await readFile(manifest,'utf8'));if(data.version!==1||!Array.isArray(data.entries))throw Error('Invalid historical title manifest');entries=[...new Set([...entries,...data.entries])];}
       if(!Array.isArray(entries)||!entries.every(x=>typeof x==='string'&&/^[0-9a-f]{64}$/.test(x)))throw Error('Invalid historical title fingerprint');
       const prefix=start+'\nimport {createHash as tdHash} from "node:crypto";\nconst tdFrozen=new Set('+JSON.stringify(entries)+');\n'
@@ -116,4 +116,4 @@ async function host() {
   catch(error){for(const f of applied.reverse())await replaceFile(f.file,f.current);throw error;}
 }
 if(!root||!['--inventory','--check','--apply','--read-only','--restore'].includes(mode))throw Error('Expected --inventory <backup-sessions> <manifest>, or --check/--apply/--read-only/--restore <host> [manifest]');
-if(mode==='--inventory')await fromBackup();else await host();
+if(mode==='--inventory')await fromBackup();else await host().catch(reportHostError);

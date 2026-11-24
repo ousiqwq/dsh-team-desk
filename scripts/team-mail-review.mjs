@@ -1,3 +1,4 @@
+import {UnsupportedHostBuild, readHostFile, reportHostError} from './host-compatibility.mjs';
 import {createHash, randomUUID} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import {readFile, writeFile, rename, rm, stat} from 'node:fs/promises';
@@ -40,7 +41,7 @@ export function teamMailReviewer(source, restore = false) {
   const original = source.replace(anchor + teamGate, anchor).replace(anchor + mailGate, anchor)
     .replace(helper+'\n','').replace(initAnchor+init,initAnchor).replace(userProjection,userAnchor);
   if (![originalHash,'5e2ccc5495defb9b533fdc5888e5a9487396a9dedd298125874e203679785464'].includes(hash(original)) || [anchor,initAnchor,userAnchor].some(key=>original.split(key).length!==2))
-    throw Error('Unrecognized DSH Auto reviewer build. Its review policy has been left intact.');
+    throw new UnsupportedHostBuild('Unrecognized DSH Auto reviewer build. Its review policy has been left intact.');
   const mailOnly = original.replace(anchor, anchor + mailGate);
   const withHistory = (source) => helper+'\n'+source
     .replace(initAnchor, initAnchor+init).replace(userAnchor,userProjection);
@@ -49,17 +50,16 @@ export function teamMailReviewer(source, restore = false) {
   return restore ? original : full;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href
-    && process.argv[1].endsWith('team-mail-review.mjs')) {
+async function main() {
   const [action, runtime] = process.argv.slice(2);
   if (!['--check', '--apply', '--restore'].includes(action) || !runtime)
     throw Error('Usage: node scripts/team-mail-review.mjs --check|--apply|--restore RUNTIME');
   const pkg = join(resolve(runtime), 'node_modules/@deepseek-ai/dsh-experimental-auto-review');
-  const manifest = JSON.parse(await readFile(join(pkg, 'package.json'), 'utf8'));
-  if (manifest.name !== '@deepseek-ai/dsh-experimental-auto-review' || !['0.2.2-rc.2','0.2.3-alpha.2'].includes(manifest.version))
-    throw Error('Unsupported Auto reviewer package.');
+  const manifest = JSON.parse(await readHostFile(join(pkg, 'package.json')));
+  if (manifest.name !== '@deepseek-ai/dsh-experimental-auto-review')
+    throw new Error('Unexpected Auto reviewer package name.');
   const path = join(pkg, 'lib/index.js');
-  const before = await readFile(path, 'utf8');
+  const before = await readHostFile(path);
   const after = teamMailReviewer(before, action === '--restore');
   if (action !== '--check' && after !== before) {
     const tmp = path + '.' + randomUUID() + '.tmp';
@@ -71,4 +71,9 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   }
   const current = action === '--check' ? before : after;
   console.log(current.includes(teamGate) ? 'Team coordination and review-history adapter present' : current.includes(initAnchor+init) ? 'Team mailbox and review-history adapter present' : current.includes(mailGate) ? 'Team mailbox adapter only' : 'Original DSH Auto reviewer');
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href
+    && process.argv[1].endsWith('team-mail-review.mjs')) {
+  await main().catch(reportHostError);
 }

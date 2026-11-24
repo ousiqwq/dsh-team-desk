@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-team-desk",
-  "version": "0.15.5",
+  "version": "0.15.6",
   "description": "Native multi-conversation collaboration for DeepSeek Harness",
   "type": "module",
   "author": "ousiqwq",
@@ -18,6 +18,7 @@
     "dist/client.js",
     "dist/title-receipt.js",
     "bin/team-desk.mjs",
+    "scripts/host-compatibility.mjs",
     "scripts/alpha-shared-header.mjs",
     "scripts/alpha-archive.mjs",
     "scripts/alpha-legacy-titles.mjs",
@@ -103,13 +104,13 @@
     "typescript": "^6.0.3"
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "4.2.0-alpha.1",
-    "@deepseek-ai/dsh-agent": "0.2.3-alpha.2",
-    "@deepseek-ai/dsh-llm": "0.2.3-alpha.2",
-    "@deepseek-ai/dsh-session": "0.2.3-alpha.2",
-    "@deepseek-ai/dsh-session-persistence": "0.2.3-alpha.2",
-    "@deepseek-ai/dsh-system-prompt": "0.2.3-alpha.2",
-    "@deepseek-ai/dsh-tools": "0.2.3-alpha.2"
+    "@deepseek-ai/cordis": "*",
+    "@deepseek-ai/dsh-agent": "*",
+    "@deepseek-ai/dsh-llm": "*",
+    "@deepseek-ai/dsh-session": "*",
+    "@deepseek-ai/dsh-session-persistence": "*",
+    "@deepseek-ai/dsh-system-prompt": "*",
+    "@deepseek-ai/dsh-tools": "*"
   },
   "repository": {
     "type": "git",

@@ -1,7 +1,8 @@
 // The alpha.2 frame exposes the conversation body as a factory but keeps the
 // header private to the main view. Give both views the same native header.
+import {UnsupportedHostBuild, readHostFile, reportHostError} from './host-compatibility.mjs';
 import { createHash } from 'node:crypto';
-import { readFile, rename, stat, writeFile, unlink } from 'node:fs/promises';
+import { rename, stat, writeFile, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { lifecycleBundles,previousLifecycleBundles } from './alpha-archive.mjs';
@@ -135,39 +136,42 @@ const archiveUI=[
  ['const canUnarchive=useSessionAccess(result.id,`workspace/unarchiveSession`)','const canUnarchive=useSessionAccess(result.id,`workspace/unarchiveSession`)&&canArchiveTeamRow(result.id)'],
  ['archiveSession:sessionId=>{uiWorkspace.archiveSession','archiveSession:sessionId=>{if(!canArchiveTeamRow(sessionId))return;uiWorkspace.archiveSession'],
 ];
-const updates=[];
-for (const [name,digest,changes] of bundles) {
-  const pkg=join(root,'node_modules/@deepseek-ai',name);
-  if(JSON.parse(await readFile(join(pkg,'package.json'),'utf8')).version!=='0.2.3-alpha.2')throw Error('Unsupported '+name+' version');
-  const file=join(pkg,'lib/client.js'),current=await readFile(file,'utf8'),extra=additions[name];
-  const layoutEdits=name==='dsh-client-ui-workspace'?treeLayout:[];
-  const latest=name==="dsh-client-ui-workspace"?rowSemantics:name==="dsh-client-ui-sidebar-right"?readySelection:[];
-  const guard=name==='dsh-client-ui-workspace'?guardedRowDrop:[];
-  const archive=name==='dsh-client-ui-workspace'?archiveUI:[];
-  const prior=undo(undo(current,archive),guard);
-  const original=[undo(undo(undo(undo(prior,latest),layoutEdits),extra),changes),prior,undo(prior,changes),undo(undo(undo(prior,layoutEdits),extra),changes)].find(bytes=>hash(bytes)===digest);
-  if(original===undefined)throw Error('Unexpected '+name+' checksum');
-  const previous=applyEdits(original,changes,name),base=applyEdits(previous,extra,name),layoutVersion=applyEdits(base,layoutEdits,name),rowVersion=applyEdits(layoutVersion,latest,name),guardVersion=applyEdits(rowVersion,guard,name),patched=applyEdits(guardVersion,archive,name);
-  if(![original,previous,base,layoutVersion,rowVersion,guardVersion,patched].includes(current))throw Error('Unexpected partial '+name+' installation');
-  const desired=mode==='--restore'?original:patched;
-  updates.push({name,file,current,desired,status:current===original?'official':current===patched?'active':'legacy',permissions:(await stat(file)).mode});
+async function adapt() {
+  const updates=[];
+  for (const [name,digest,changes] of bundles) {
+    const pkg=join(root,'node_modules/@deepseek-ai',name);
+    const file=join(pkg,'lib/client.js'),current=await readHostFile(file),extra=additions[name];
+    const layoutEdits=name==='dsh-client-ui-workspace'?treeLayout:[];
+    const latest=name==="dsh-client-ui-workspace"?rowSemantics:name==="dsh-client-ui-sidebar-right"?readySelection:[];
+    const guard=name==='dsh-client-ui-workspace'?guardedRowDrop:[];
+    const archive=name==='dsh-client-ui-workspace'?archiveUI:[];
+    const prior=undo(undo(current,archive),guard);
+    const original=[undo(undo(undo(undo(prior,latest),layoutEdits),extra),changes),prior,undo(prior,changes),undo(undo(undo(prior,layoutEdits),extra),changes)].find(bytes=>hash(bytes)===digest);
+    if(original===undefined)throw new UnsupportedHostBuild('Unexpected '+name+' checksum');
+    const previous=applyEdits(original,changes,name),base=applyEdits(previous,extra,name),layoutVersion=applyEdits(base,layoutEdits,name),rowVersion=applyEdits(layoutVersion,latest,name),guardVersion=applyEdits(rowVersion,guard,name),patched=applyEdits(guardVersion,archive,name);
+    if(![original,previous,base,layoutVersion,rowVersion,guardVersion,patched].includes(current))throw Error('Unexpected partial '+name+' installation');
+    const desired=mode==='--restore'?original:patched;
+    updates.push({name,file,current,desired,status:current===original?'official':current===patched?'active':'legacy',permissions:(await stat(file)).mode});
+  }
+  for(const [name,digest,edits] of lifecycleBundles){
+    const file=join(root,'node_modules/@deepseek-ai',name,'lib/index.js'),current=await readHostFile(file);
+    const legacy=previousLifecycleBundles.find(bundle=>bundle[0]===name)[2];
+    const original=[current,undo(current,edits),undo(current,legacy)].find(bytes=>hash(bytes)===digest);
+    if(original===undefined)throw new UnsupportedHostBuild('Unexpected '+name+' checksum');
+    const patched=applyEdits(original,edits,name);
+    if(current!==original&&current!==patched&&current!==applyEdits(original,legacy,name))throw Error('Partial '+name+' installation');
+    updates.push({name,file,current,desired:mode==='--restore'?original:patched,status:current===original?'official':current===patched?'active':'legacy',permissions:(await stat(file)).mode});
+  }
+  async function replace(update,contents){
+   const temp=update.file+'.'+randomUUID()+'.tmp';
+   try{await writeFile(temp,contents,{flag:'wx',mode:update.permissions});await rename(temp,update.file);}
+   finally{await unlink(temp).catch(e=>{if(e.code!=='ENOENT')throw e;});}
+  }
+  const applied=[];
+  try{
+   if(mode!=='--check')for(const update of updates)if(update.current!==update.desired){await replace(update,update.desired);applied.push(update);}
+  }catch(error){for(const update of applied.reverse())await replace(update,update.current);throw error;}
+  console.log(mode==='--check' ? updates.map(u=>u.name+' '+u.status).join('\n') : mode==='--apply'?'native UI adapters active':'official bundles restored');
 }
-for(const [name,digest,edits] of lifecycleBundles){
-  const file=join(root,'node_modules/@deepseek-ai',name,'lib/index.js'),current=await readFile(file,'utf8');
-  const legacy=previousLifecycleBundles.find(bundle=>bundle[0]===name)[2];
-  const original=[current,undo(current,edits),undo(current,legacy)].find(bytes=>hash(bytes)===digest);
-  if(original===undefined)throw Error('Unexpected '+name+' checksum');
-  const patched=applyEdits(original,edits,name);
-  if(current!==original&&current!==patched&&current!==applyEdits(original,legacy,name))throw Error('Partial '+name+' installation');
-  updates.push({name,file,current,desired:mode==='--restore'?original:patched,status:current===original?'official':current===patched?'active':'legacy',permissions:(await stat(file)).mode});
-}
-async function replace(update,contents){
- const temp=update.file+'.'+randomUUID()+'.tmp';
- try{await writeFile(temp,contents,{flag:'wx',mode:update.permissions});await rename(temp,update.file);}
- finally{await unlink(temp).catch(e=>{if(e.code!=='ENOENT')throw e;});}
-}
-const applied=[];
-try{
- if(mode!=='--check')for(const update of updates)if(update.current!==update.desired){await replace(update,update.desired);applied.push(update);}
-}catch(error){for(const update of applied.reverse())await replace(update,update.current);throw error;}
-console.log(mode==='--check' ? updates.map(u=>u.name+' '+u.status).join('\n') : mode==='--apply'?'native UI adapters active':'official bundles restored');
+
+await adapt().catch(reportHostError);
