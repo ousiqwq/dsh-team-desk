@@ -1,6 +1,6 @@
 {
   "name": "dsh-plugin-team-desk",
-  "version": "0.15.4",
+  "version": "0.15.5",
   "description": "Native multi-conversation collaboration for DeepSeek Harness",
   "type": "module",
   "author": "ousiqwq",

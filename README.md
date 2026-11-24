@@ -1,25 +1,31 @@
 <h1 align="center">
-  <img src="assets/avatar.png" width="124" height="124" align="center" alt="月兔少女头像">
+  <img src="https://raw.githubusercontent.com/ousiqwq/dsh-team-desk/v0.15.4/assets/avatar.png" width="124" height="124" align="center" alt="月兔少女头像">
   &nbsp;
-  <img src="assets/wordmark.svg" width="330" align="center" alt="Team Desk · Multi-session collaboration for DeepSeek Harness">
+  <img src="https://raw.githubusercontent.com/ousiqwq/dsh-team-desk/v0.15.4/assets/wordmark.svg" width="330" align="center" alt="Team Desk · Multi-session collaboration for DeepSeek Harness">
 </h1>
 
 在 DeepSeek Harness 的同一个工作区并排打开团队会话。每个成员有独立的对话、职责和权限，可以接单、交流，并把结果交回派单人。
 
 ## 安装
 
-适用于 **DSH 0.2.3-alpha.2** 和 **Node.js 26.13.1 或以上**（其实你装上去试试就行了）。两种安装方式任选其一。
+适用于 **DSH 0.2.3-alpha.2** 和 **Node.js 26.13.1 或以上**（其实你装上去试试就行了）。三种安装方式任选其一。
 
 **npm 一键安装（推荐）**
 
 ```sh
-npm exec --yes --package=dsh-plugin-team-desk@0.15.4 -- dsh-team-desk install --profile web
+npm exec --yes --package=dsh-plugin-team-desk@0.15.5 -- dsh-team-desk install --profile web
+```
+
+**npx 一键安装**
+
+```sh
+npx --yes dsh-plugin-team-desk@0.15.5 install --profile web
 ```
 
 **DSH CLI 一键安装**
 
 ```sh
-dsh plugin --profile web add dsh-plugin-team-desk@0.15.4 && npx --yes dsh-plugin-team-desk@0.15.4 adapt
+dsh plugin --profile web add dsh-plugin-team-desk@0.15.5 && npx --yes dsh-plugin-team-desk@0.15.5 adapt
 ```
 
 安装后重启 DSH。自定义宿主目录可在 `install` 或 `adapt` 命令末尾添加 `--host /path/to/host`。宿主适配作用于使用同一套 DSH 程序文件的所有配置。
@@ -33,7 +39,7 @@ dsh plugin --profile web add dsh-plugin-team-desk@0.15.4 && npx --yes dsh-plugin
 
 首次组队时，在设置中点「创建团队」并确认，当前会话就成为主会话。在「切换预设」选择 **逆向工作流（四人）**，打开「同时应用预设排布」，再点 **应用到当前团队**。配置生效后点「查看窗口」，就能在四个窗格里分别对话。
 
-![四个会话正在排查日历订阅异常。工作席发出两条派单，静态席收件后核对字段，动态席运行复现用例。标注分别指向右上角双人图标和左侧会话右键菜单，菜单摘图显示「创建团队」和「编辑此团队」。](assets/previews/four-panes.png)
+![四个会话正在排查日历订阅异常。工作席发出两条派单，静态席收件后核对字段，动态席运行复现用例。标注分别指向右上角双人图标和左侧会话右键菜单，菜单摘图显示「创建团队」和「编辑此团队」。](https://raw.githubusercontent.com/ousiqwq/dsh-team-desk/v0.15.4/assets/previews/four-panes.png)
 
 ## 拖拽排布
 
@@ -42,7 +48,7 @@ dsh plugin --profile web add dsh-plugin-team-desk@0.15.4 && npx --yes dsh-plugin
 - **替换窗格**　四窗已满时，从左侧拖入尚未显示的会话，会替换鼠标所在的窗格。被替换的会话仍在左侧列表。
 - **放进右侧栏**　先展开右侧栏，再把会话拖进栏内。拖到对话区的最右边缘会调整分屏。
 
-![从左侧会话树按住「复现订阅异常」，拖入「核对日历字段」下方的蓝色区域后松开。](assets/previews/drag-to-split.png)
+![从左侧会话树按住「复现订阅异常」，拖入「核对日历字段」下方的蓝色区域后松开。](https://raw.githubusercontent.com/ousiqwq/dsh-team-desk/v0.15.4/assets/previews/drag-to-split.png)
 
 ## 自建团队与预设
 
@@ -71,4 +77,4 @@ dsh plugin --profile web add dsh-plugin-team-desk@0.15.4 && npx --yes dsh-plugin
 
 ## 许可证
 
-[MIT](LICENSE)
+[MIT](https://github.com/ousiqwq/dsh-team-desk/blob/main/LICENSE)
