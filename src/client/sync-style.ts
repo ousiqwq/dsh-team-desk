@@ -20,10 +20,21 @@ export const syncCss=`
 .td-sync-note,.td-sync-box p{margin:4px 0}
 .td-sync-box{box-sizing:border-box;min-width:0;overflow:hidden;border-radius:var(--dsw-radius-md);background:var(--dsw-alias-markdown-code-block)}
 .td-sync-banner{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 12px;border-bottom:.5px solid var(--dsw-alias-border-l2)}
-.td-sync-scroll{box-sizing:border-box;max-height:min(var(--dsl-terminal-output-max-height,224px),45dvh);overflow:auto;padding:8px 12px}
-.td-sync-scroll:focus-visible{outline:1px solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:-2px}
 .td-sync dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;margin:0;font-size:12px}
 .td-sync dt{color:var(--dsw-alias-label-tertiary)}.td-sync dd{margin:0;overflow-wrap:anywhere}
-.td-sync-raw{max-height:min(160px,30dvh)}
+.td-sync-meta,.td-sync-raw{padding:8px 12px}
+.td-sync .td-sync-box>:is(.td-sync-code,.td-sync-code-range){margin:4px 12px 10px}
+.td-sync .td-sync-code-range>.td-sync-code{margin:0}
+.td-sync-code>div:has(>[data-code-block-banner]){position:static}
+.td-sync-code-range [data-code-block-content] pre::before{content:var(--td-sync-line-range);display:block;padding-inline:16px;color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere}
+.td-sync-code-range [data-code-block-content] code{display:block;white-space:normal}
+.td-sync-code-range [data-code-block-content] code>.line{display:block;white-space:pre-wrap;overflow-wrap:anywhere}
+.td-sync-code-range [data-code-block-content] code>.line:first-child{display:none}
+.td-sync-change-scroll,.td-sync-raw{box-sizing:border-box;overflow:auto}
+.td-sync-change-scroll{max-height:min(304px,50dvh)}
+.td-sync-raw{max-height:min(224px,36dvh)}
+.td-sync-change-scroll:focus-visible,.td-sync-raw:focus-visible{outline:1px solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:-2px}
+.td-sync-evidence{margin:3px 0 0;padding:0;list-style:none;color:var(--dsw-alias-label-tertiary)}
+.td-sync-evidence li+li{margin-top:3px}
 .td-sync-raw pre{margin:8px 0 0;padding-top:8px;border-top:.5px solid var(--dsw-alias-border-l2);white-space:pre-wrap;overflow-wrap:anywhere;font-family:var(--ds-font-family-code,monospace)}
 `;

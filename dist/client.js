@@ -149,6 +149,10 @@ var zh = {
   "\u8BB0\u5F55 ID": "\u8BB0\u5F55 ID",
   "\u6B64\u5904\u4E3A\u5DEE\u5F02\u6458\u8981\uFF0C\u5B8C\u6574\u5185\u5BB9\u8BF7\u67E5\u539F\u751F\u8BB0\u5F55\u3002": "\u6B64\u5904\u4E3A\u5DEE\u5F02\u6458\u8981\uFF0C\u5B8C\u6574\u5185\u5BB9\u8BF7\u67E5\u539F\u751F\u8BB0\u5F55\u3002",
   "\u6765\u6E90\u8BB0\u5F55": "\u6765\u6E90\u8BB0\u5F55",
+  "\u65E7\u7B2C {p0} \u884C": "\u65E7\u7B2C {p0} \u884C",
+  "\u65B0\u7B2C {p0} \u884C": "\u65B0\u7B2C {p0} \u884C",
+  "\u65E7\u7248\u65E0\u5BF9\u5E94\u884C": "\u65E7\u7248\u65E0\u5BF9\u5E94\u884C",
+  "\u65B0\u7248\u65E0\u5BF9\u5E94\u884C": "\u65B0\u7248\u65E0\u5BF9\u5E94\u884C",
   "\u9006\u5411\u5DE5\u4F5C\u6D41": "\u9006\u5411\u5DE5\u4F5C\u6D41",
   "\u9006\u5411\u5DE5\u4F5C\u6D41\uFF08\u56DB\u4EBA\uFF09": "\u9006\u5411\u5DE5\u4F5C\u6D41\uFF08\u56DB\u4EBA\uFF09",
   "\u76D1\u7763\u8D1F\u8D23\u9A8C\u6536\uFF0C\u5DE5\u4F5C\u8D1F\u8D23\u5B9E\u65BD\u548C\u534F\u8C03\uFF0C\u9759\u6001\u4E0E\u52A8\u6001\u6210\u5458\u6309\u9700\u5206\u5DE5\uFF1B\u7ED3\u679C\u7ECF\u5DE5\u4F5C\u6C47\u603B\u540E\u4EA4\u76D1\u7763\u68C0\u67E5\u3002": "\u76D1\u7763\u8D1F\u8D23\u9A8C\u6536\uFF0C\u5DE5\u4F5C\u8D1F\u8D23\u5B9E\u65BD\u548C\u534F\u8C03\uFF0C\u9759\u6001\u4E0E\u52A8\u6001\u6210\u5458\u6309\u9700\u5206\u5DE5\uFF1B\u7ED3\u679C\u7ECF\u5DE5\u4F5C\u6C47\u603B\u540E\u4EA4\u76D1\u7763\u68C0\u67E5\u3002",
@@ -1091,6 +1095,10 @@ var en = {
   "\u8BB0\u5F55 ID": "Record ID",
   "\u6B64\u5904\u4E3A\u5DEE\u5F02\u6458\u8981\uFF0C\u5B8C\u6574\u5185\u5BB9\u8BF7\u67E5\u539F\u751F\u8BB0\u5F55\u3002": "This is a diff excerpt; see the native record for the full content.",
   "\u6765\u6E90\u8BB0\u5F55": "Source records",
+  "\u65E7\u7B2C {p0} \u884C": "Old \xB7 line {p0}",
+  "\u65B0\u7B2C {p0} \u884C": "New \xB7 line {p0}",
+  "\u65E7\u7248\u65E0\u5BF9\u5E94\u884C": "Old \xB7 no lines",
+  "\u65B0\u7248\u65E0\u5BF9\u5E94\u884C": "New \xB7 no lines",
   "\u9006\u5411\u5DE5\u4F5C\u6D41": "Reverse workflow",
   "\u9006\u5411\u5DE5\u4F5C\u6D41\uFF08\u56DB\u4EBA\uFF09": "Reverse workflow (four members)",
   "\u76D1\u7763\u8D1F\u8D23\u9A8C\u6536\uFF0C\u5DE5\u4F5C\u8D1F\u8D23\u5B9E\u65BD\u548C\u534F\u8C03\uFF0C\u9759\u6001\u4E0E\u52A8\u6001\u6210\u5458\u6309\u9700\u5206\u5DE5\uFF1B\u7ED3\u679C\u7ECF\u5DE5\u4F5C\u6C47\u603B\u540E\u4EA4\u76D1\u7763\u68C0\u67E5\u3002": "The supervisor accepts results; the worker implements and coordinates static and dynamic members, then returns an integrated result for acceptance.",
@@ -8399,11 +8407,22 @@ var syncCss = `
 .td-sync-note,.td-sync-box p{margin:4px 0}
 .td-sync-box{box-sizing:border-box;min-width:0;overflow:hidden;border-radius:var(--dsw-radius-md);background:var(--dsw-alias-markdown-code-block)}
 .td-sync-banner{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 12px;border-bottom:.5px solid var(--dsw-alias-border-l2)}
-.td-sync-scroll{box-sizing:border-box;max-height:min(var(--dsl-terminal-output-max-height,224px),45dvh);overflow:auto;padding:8px 12px}
-.td-sync-scroll:focus-visible{outline:1px solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:-2px}
 .td-sync dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 12px;margin:0;font-size:12px}
 .td-sync dt{color:var(--dsw-alias-label-tertiary)}.td-sync dd{margin:0;overflow-wrap:anywhere}
-.td-sync-raw{max-height:min(160px,30dvh)}
+.td-sync-meta,.td-sync-raw{padding:8px 12px}
+.td-sync .td-sync-box>:is(.td-sync-code,.td-sync-code-range){margin:4px 12px 10px}
+.td-sync .td-sync-code-range>.td-sync-code{margin:0}
+.td-sync-code>div:has(>[data-code-block-banner]){position:static}
+.td-sync-code-range [data-code-block-content] pre::before{content:var(--td-sync-line-range);display:block;padding-inline:16px;color:var(--dsw-alias-label-secondary);overflow-wrap:anywhere}
+.td-sync-code-range [data-code-block-content] code{display:block;white-space:normal}
+.td-sync-code-range [data-code-block-content] code>.line{display:block;white-space:pre-wrap;overflow-wrap:anywhere}
+.td-sync-code-range [data-code-block-content] code>.line:first-child{display:none}
+.td-sync-change-scroll,.td-sync-raw{box-sizing:border-box;overflow:auto}
+.td-sync-change-scroll{max-height:min(304px,50dvh)}
+.td-sync-raw{max-height:min(224px,36dvh)}
+.td-sync-change-scroll:focus-visible,.td-sync-raw:focus-visible{outline:1px solid var(--dsw-focus-ring-color,var(--dsw-alias-state-business-primary));outline-offset:-2px}
+.td-sync-evidence{margin:3px 0 0;padding:0;list-style:none;color:var(--dsw-alias-label-tertiary)}
+.td-sync-evidence li+li{margin-top:3px}
 .td-sync-raw pre{margin:8px 0 0;padding-top:8px;border-top:.5px solid var(--dsw-alias-border-l2);white-space:pre-wrap;overflow-wrap:anywhere;font-family:var(--ds-font-family-code,monospace)}
 `;
 
@@ -8467,6 +8486,24 @@ function syncMessageSource(content, source, sessionId) {
 }
 function syncFileName(resource) {
   return resource.split(/[\\/]/).filter(Boolean).at(-1) ?? resource;
+}
+function syncChangeLanguage(content) {
+  return /^(?:@@ |diff --git |[+-])/m.test(content) ? "diff" : "text";
+}
+function unifiedRange(start, end) {
+  if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 1 || end < start - 1) return;
+  const count = end - start + 1;
+  if (count === 0) return { range: `${start - 1},0`, lines: void 0 };
+  if (count === 1) return { range: String(start), lines: String(start) };
+  return { range: `${start},${count}`, lines: `${start}\u2013${end}` };
+}
+function legacySyncDiff(diff) {
+  const match = /^@@ 旧 (\d+)–(\d+) \/ 新 (\d+)–(\d+) @@(?=\r?\n|$)/.exec(diff);
+  if (!match) return;
+  const before = unifiedRange(Number(match[1]), Number(match[2]));
+  const after = unifiedRange(Number(match[3]), Number(match[4]));
+  if (!before || !after) return;
+  return { code: `@@ -${before.range} +${after.range} @@` + diff.slice(match[0].length), before: before.lines, after: after.lines };
 }
 
 // src/client/sync-delivery-group.ts
@@ -8543,7 +8580,23 @@ var operationLabel = (op) => tr({ create: "\u65B0\u589E", update: "\u4FEE\u6539"
 var reasonLabel = (r) => tr({ subscription: "\u5DF2\u8BFB\u6216\u8BA2\u9605", working: "\u6B63\u5728\u5904\u7406\u6B64\u8D44\u6E90", owner: "\u5B50\u4EE3\u7406\u6240\u5C5E\u6210\u5458" }[r]);
 var pageSize = 8;
 function Code({ code, lang = "text" }) {
-  return /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(import_dsh_client_ui_primitives29.CodeBlock, { code, lang, copyLabel: tr("\u590D\u5236"), copiedLabel: tr("\u5DF2\u590D\u5236") });
+  const preview = lang === "diff" ? legacySyncDiff(code) : void 0;
+  const block = /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
+    import_dsh_client_ui_primitives29.CodeBlock,
+    {
+      className: "td-sync-code",
+      code: preview?.code ?? code,
+      lang,
+      copyLabel: tr("\u590D\u5236"),
+      copiedLabel: tr("\u5DF2\u590D\u5236")
+    }
+  );
+  if (!preview) return block;
+  const lineRange = [
+    preview.before ? tr("\u65E7\u7B2C {p0} \u884C", { p0: preview.before }) : tr("\u65E7\u7248\u65E0\u5BF9\u5E94\u884C"),
+    preview.after ? tr("\u65B0\u7B2C {p0} \u884C", { p0: preview.after }) : tr("\u65B0\u7248\u65E0\u5BF9\u5E94\u884C")
+  ].join(" \u2192 ");
+  return /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("div", { className: "td-sync-code-range", style: { "--td-sync-line-range": JSON.stringify(lineRange) }, children: block });
 }
 function OriginalMessage({ message }) {
   const { copied, onCopy } = (0, import_dsh_client_ui_primitives29.useClipboardCopy)(message.raw);
@@ -8552,7 +8605,7 @@ function OriginalMessage({ message }) {
       /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("strong", { children: tr("\u6765\u6E90\u4E0E\u539F\u59CB\u6D88\u606F") }),
       /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(import_dsh_client_ui_primitives29.Button, { size: "sm", onClick: onCopy, children: copied ? tr("\u5DF2\u590D\u5236") : tr("\u590D\u5236") })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("div", { className: "td-sync-scroll td-sync-raw", role: "region", "aria-label": tr("\u6765\u6E90\u4E0E\u539F\u59CB\u6D88\u606F"), tabIndex: 0, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("div", { className: "td-sync-raw", role: "region", "aria-label": tr("\u6765\u6E90\u4E0E\u539F\u59CB\u6D88\u606F"), tabIndex: 0, children: [
       /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("dl", { children: [
         /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("dt", { children: tr("\u53D1\u9001\u4F1A\u8BDD") }),
         /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("dd", { children: message.sender }),
@@ -8660,8 +8713,8 @@ function ReadStatus({ page }) {
   ] }) : /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("div", { role: "status", className: "td-sync-note", children: tr("\u6B63\u5728\u8BFB\u53D6\u540C\u6B65\u8BE6\u60C5\u2026") });
 }
 function ChangeBody({ change: c, name, reasons }) {
-  return /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("section", { className: "td-sync-box td-sync-scroll", role: "region", "aria-label": tr("\u6587\u4EF6\u4E0E\u534F\u4F5C\u540C\u6B65"), tabIndex: 0, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("dl", { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("section", { className: "td-sync-box td-sync-change-scroll", role: "region", "aria-label": tr("\u6587\u4EF6\u4E0E\u534F\u4F5C\u540C\u6B65"), tabIndex: 0, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("dl", { className: "td-sync-meta", children: [
       /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("dt", { children: tr("\u64CD\u4F5C") }),
       /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("dd", { children: operationLabel(c.operation) }),
       /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("dt", { children: tr("\u5B8C\u6574\u8DEF\u5F84") }),
@@ -8678,7 +8731,8 @@ function ChangeBody({ change: c, name, reasons }) {
       /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("dd", { children: [
         name,
         " \xB7 ",
-        c.origin === "native-file" ? tr("\u539F\u751F\u5DE5\u5177\u89C2\u5BDF") : tr("\u6210\u5458\u62A5\u544A\uFF0C\u5C1A\u672A\u6838\u5B9E")
+        c.origin === "native-file" ? tr("\u539F\u751F\u5DE5\u5177\u89C2\u5BDF") : tr("\u6210\u5458\u62A5\u544A\uFF0C\u5C1A\u672A\u6838\u5B9E"),
+        c.evidence?.length ? /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("ul", { className: "td-sync-evidence", children: [...new Set(c.evidence)].map((e) => /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("li", { children: e }, e)) }) : null
       ] }),
       reasons?.length ? /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)(import_jsx_runtime28.Fragment, { children: [
         /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("dt", { children: tr("\u63A5\u6536\u539F\u56E0") }),
@@ -8696,13 +8750,9 @@ function ChangeBody({ change: c, name, reasons }) {
       /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("dd", { children: c.id })
     ] }),
     c.diff && /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)(import_jsx_runtime28.Fragment, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Code, { code: c.diff, lang: "diff" }),
-      c.truncated && /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("p", { children: tr("\u6B64\u5904\u4E3A\u5DEE\u5F02\u6458\u8981\uFF0C\u5B8C\u6574\u5185\u5BB9\u8BF7\u67E5\u539F\u751F\u8BB0\u5F55\u3002") })
-    ] }),
-    c.evidence?.length ? /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("details", { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("summary", { children: tr("\u6765\u6E90\u8BB0\u5F55") }),
-      c.evidence.map((e) => /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("p", { children: e }, e))
-    ] }) : null
+      /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Code, { code: c.diff, lang: syncChangeLanguage(c.diff) }),
+      c.truncated && /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("div", { className: "td-sync-meta", children: tr("\u6B64\u5904\u4E3A\u5DEE\u5F02\u6458\u8981\uFF0C\u5B8C\u6574\u5185\u5BB9\u8BF7\u67E5\u539F\u751F\u8BB0\u5F55\u3002") })
+    ] })
   ] });
 }
 function FileRow({ entry, reader, single, labels, scope }) {
@@ -8772,13 +8822,15 @@ function OtherReceipt({ receipt, reader, labels }) {
   if (detail?.summary?.recordIds.length) return /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Files, { receipts: [{ ...receipt, summary: detail.summary }], reader, labels });
   return /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("div", { className: "td-sync-single td-sync-details", children: [
     /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(ReadStatus, { page }),
-    detail?.shared && /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("div", { className: "td-sync-box td-sync-scroll", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("strong", { children: [
-        detail.shared.key,
-        " \xB7 v",
-        detail.shared.revision
+    detail?.shared && /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("div", { className: "td-sync-box td-sync-change-scroll", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("div", { className: "td-sync-meta", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)("strong", { children: [
+          detail.shared.key,
+          " \xB7 v",
+          detail.shared.revision
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("p", { children: detail.shared.reason })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime28.jsx)("p", { children: detail.shared.reason }),
       /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Code, { code: JSON.stringify(detail.shared.value, null, 2), lang: "json" })
     ] }),
     detail?.items.map((c) => /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(ChangeBody, { change: c, name: labels[c.author] ?? c.author, reasons: detail.summary?.receivedBecause?.[c.id] }, c.id)),

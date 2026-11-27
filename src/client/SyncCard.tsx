@@ -1,10 +1,10 @@
-import {useEffect, useMemo, useState} from 'react';
+import {type CSSProperties, useEffect, useMemo, useState} from 'react';
 import {Button, CodeBlock, DisclosureRow, IconChevronRightOutlineRegular, useClipboardCopy} from '@deepseek-ai/dsh-client-ui-primitives';
 import type {ChangeNotice, Message} from '../domain/types.ts';
 import {legacySyncReference, type SyncDetail, type SyncDeliveryHint, type SyncReason} from '../domain/sync-summary.ts';
 import {deliveryTotals, type DeliveryGroup} from './sync-delivery-group.ts';
 import {fileEntries, fileReceipt, type FileEntry, type FileReceipt} from './sync-record-list.ts';
-import {syncFileName, type SyncMessageSource} from './sync-message.ts';
+import {legacySyncDiff, syncChangeLanguage, syncFileName, type SyncMessageSource} from './sync-message.ts';
 import {tr, localeId} from './locale.ts';
 
 const operationLabel = (op: ChangeNotice['operation']) => tr(({create:'新增', update:'修改', delete:'删除', rename:'重命名', observe:'变更'} as const)[op ?? 'observe']);
@@ -13,13 +13,22 @@ const pageSize = 8;
 type Labels = Readonly<Record<string,string>>;
 
 function Code({code, lang = 'text'}: {code:string; lang?:string}) {
- return <CodeBlock code={code} lang={lang} copyLabel={tr('复制')} copiedLabel={tr('已复制')}/>;
+ const preview=lang==='diff' ? legacySyncDiff(code) : undefined;
+ const block=<CodeBlock className="td-sync-code" code={preview?.code??code} lang={lang}
+  copyLabel={tr('复制')} copiedLabel={tr('已复制')}/>;
+ if(!preview)return block;
+ const lineRange=[
+  preview.before ? tr('旧第 {p0} 行',{p0:preview.before}) : tr('旧版无对应行'),
+  preview.after ? tr('新第 {p0} 行',{p0:preview.after}) : tr('新版无对应行'),
+ ].join(' → ');
+ // Native CodeBlock copies the original pre text, including the normalized hunk.
+ return <div className="td-sync-code-range" style={{'--td-sync-line-range':JSON.stringify(lineRange)} as CSSProperties}>{block}</div>;
 }
 function OriginalMessage({message}: {message: SyncMessageSource}) {
  const {copied, onCopy} = useClipboardCopy(message.raw);
  return <section className="td-sync-box td-sync-source" data-team-sync={message.id}>
   <div className="td-sync-banner"><strong>{tr('来源与原始消息')}</strong><Button size="sm" onClick={onCopy}>{copied ? tr('已复制') : tr('复制')}</Button></div>
-  <div className="td-sync-scroll td-sync-raw" role="region" aria-label={tr('来源与原始消息')} tabIndex={0}>
+  <div className="td-sync-raw" role="region" aria-label={tr('来源与原始消息')} tabIndex={0}>
    <dl><dt>{tr('发送会话')}</dt><dd>{message.sender}</dd><dt>{tr('接收会话')}</dt><dd>{message.target}</dd><dt>{tr('消息 ID')}</dt><dd>{message.id}</dd></dl>
    <pre>{message.raw}</pre>
   </div>
@@ -91,16 +100,17 @@ function ReadStatus({page}: {page:ReturnType<typeof usePage>}) {
   : <div role="status" className="td-sync-note">{tr('正在读取同步详情…')}</div>;
 }
 function ChangeBody({change:c,name,reasons}: {change:ChangeNotice; name:string; reasons:SyncReason[]|undefined}) {
- return <section className="td-sync-box td-sync-scroll" role="region" aria-label={tr('文件与协作同步')} tabIndex={0}>
-  <dl><dt>{tr('操作')}</dt><dd>{operationLabel(c.operation)}</dd><dt>{tr('完整路径')}</dt><dd>{c.resource}</dd>
+ return <section className="td-sync-box td-sync-change-scroll" role="region" aria-label={tr('文件与协作同步')} tabIndex={0}>
+  <dl className="td-sync-meta"><dt>{tr('操作')}</dt><dd>{operationLabel(c.operation)}</dd><dt>{tr('完整路径')}</dt><dd>{c.resource}</dd>
    {c.previousResource&&<><dt>{tr('原路径')}</dt><dd>{c.previousResource}</dd></>}
    <dt>{tr('前版本')}</dt><dd>{c.beforeVersion??tr('未记录')}</dd><dt>{tr('记录版本')}</dt><dd>{c.version}</dd>
-   <dt>{tr('来源')}</dt><dd>{name} · {c.origin==='native-file'?tr('原生工具观察'):tr('成员报告，尚未核实')}</dd>
+   <dt>{tr('来源')}</dt><dd>{name} · {c.origin==='native-file'?tr('原生工具观察'):tr('成员报告，尚未核实')}
+    {c.evidence?.length ? <ul className="td-sync-evidence">{[...new Set(c.evidence)].map(e=><li key={e}>{e}</li>)}</ul> : null}
+   </dd>
    {reasons?.length ? <><dt>{tr('接收原因')}</dt><dd>{reasons.map(reasonLabel).join(' / ')}</dd></> : null}
    {c.provenance?.actorSessionId&&<><dt>{tr('实际执行会话')}</dt><dd>{c.provenance.actorSessionId}</dd></>}
    {c.afterHash&&<><dt>SHA-256</dt><dd>{c.afterHash}</dd></>}<dt>{tr('记录 ID')}</dt><dd>{c.id}</dd></dl>
-  {c.diff&&<><Code code={c.diff} lang="diff"/>{c.truncated&&<p>{tr('此处为差异摘要，完整内容请查原生记录。')}</p>}</>}
-  {c.evidence?.length ? <details><summary>{tr('来源记录')}</summary>{c.evidence.map(e=><p key={e}>{e}</p>)}</details> : null}
+  {c.diff&&<><Code code={c.diff} lang={syncChangeLanguage(c.diff)}/>{c.truncated&&<div className="td-sync-meta">{tr('此处为差异摘要，完整内容请查原生记录。')}</div>}</>}
  </section>;
 }
 function FileRow({entry, reader, single, labels, scope}: {entry:FileEntry; reader:Reader; single:boolean; labels:Labels;scope?:string|undefined}) {
@@ -146,7 +156,7 @@ function OtherReceipt({receipt,reader,labels}: {receipt:FileReceipt;reader:Reade
  const legacy=legacySyncReference(message.body);
  if (detail?.summary?.recordIds.length) return <Files receipts={[{...receipt,summary:detail.summary}]} reader={reader} labels={labels}/>;
  return <div className="td-sync-single td-sync-details"><ReadStatus page={page}/>
-  {detail?.shared && <div className="td-sync-box td-sync-scroll"><strong>{detail.shared.key} · v{detail.shared.revision}</strong><p>{detail.shared.reason}</p><Code code={JSON.stringify(detail.shared.value,null,2)} lang="json"/></div>}
+  {detail?.shared && <div className="td-sync-box td-sync-change-scroll"><div className="td-sync-meta"><strong>{detail.shared.key} · v{detail.shared.revision}</strong><p>{detail.shared.reason}</p></div><Code code={JSON.stringify(detail.shared.value,null,2)} lang="json"/></div>}
   {detail?.items.map(c=><ChangeBody key={c.id} change={c} name={labels[c.author]??c.author} reasons={detail.summary?.receivedBecause?.[c.id]}/>)}
   {legacy.resource && !detail?.items.length && <p className="td-sync-note">{legacy.resource} · {legacy.version??tr('未记录')}</p>}
   {detail?.kind==='legacy-summary' && <p className="td-sync-note">{tr('旧版摘要只保存了序号范围，无法准确还原完整文件清单。')}</p>}
